@@ -527,9 +527,9 @@ class PHPMailer
 
     /**
      * What to put in the X-Mailer header.
-     * Options: An empty string for PHPMailer default, whitespace for none, or a string to use.
+     * Options: An empty string for PHPMailer default, whitespace/null for none, or a string to use.
      *
-     * @var string
+     * @var string|null
      */
     public $XMailer = '';
 
@@ -1015,10 +1015,12 @@ class PHPMailer
         $pos = strrpos($address, '@');
         if (false === $pos) {
             // At-sign is missing.
-            $error_message = sprintf('%s (%s): %s',
+            $error_message = sprintf(
+                '%s (%s): %s',
                 $this->lang('invalid_address'),
                 $kind,
-                $address);
+                $address
+            );
             $this->setError($error_message);
             $this->edebug($error_message);
             if ($this->exceptions) {
@@ -2378,7 +2380,7 @@ class PHPMailer
         if (null !== $this->Priority) {
             $result .= $this->headerLine('X-Priority', $this->Priority);
         }
-        if ('' == $this->XMailer) {
+        if ('' === $this->XMailer) {
             $result .= $this->headerLine(
                 'X-Mailer',
                 'PHPMailer ' . self::VERSION . ' (https://github.com/PHPMailer/PHPMailer)'
@@ -2421,19 +2423,19 @@ class PHPMailer
         switch ($this->message_type) {
             case 'inline':
                 $result .= $this->headerLine('Content-Type', static::CONTENT_TYPE_MULTIPART_RELATED . ';');
-                $result .= $this->textLine("\tboundary=\"" . $this->boundary[1] . '"');
+                $result .= $this->textLine(' boundary="' . $this->boundary[1] . '"');
                 break;
             case 'attach':
             case 'inline_attach':
             case 'alt_attach':
             case 'alt_inline_attach':
                 $result .= $this->headerLine('Content-Type', static::CONTENT_TYPE_MULTIPART_MIXED . ';');
-                $result .= $this->textLine("\tboundary=\"" . $this->boundary[1] . '"');
+                $result .= $this->textLine(' boundary="' . $this->boundary[1] . '"');
                 break;
             case 'alt':
             case 'alt_inline':
                 $result .= $this->headerLine('Content-Type', static::CONTENT_TYPE_MULTIPART_ALTERNATIVE . ';');
-                $result .= $this->textLine("\tboundary=\"" . $this->boundary[1] . '"');
+                $result .= $this->textLine(' boundary="' . $this->boundary[1] . '"');
                 break;
             default:
                 // Catches case 'plain': and case '':
@@ -2567,7 +2569,8 @@ class PHPMailer
                 $body .= $mimepre;
                 $body .= $this->textLine('--' . $this->boundary[1]);
                 $body .= $this->headerLine('Content-Type', static::CONTENT_TYPE_MULTIPART_RELATED . ';');
-                $body .= $this->textLine("\tboundary=\"" . $this->boundary[2] . '"');
+                $body .= $this->textLine(' boundary="' . $this->boundary[2] . '";');
+                $body .= $this->textLine(' type="' . static::CONTENT_TYPE_TEXT_HTML . '"');
                 $body .= static::$LE;
                 $body .= $this->getBoundary($this->boundary[2], $bodyCharSet, '', $bodyEncoding);
                 $body .= $this->encodeString($this->Body, $bodyEncoding);
@@ -2598,7 +2601,8 @@ class PHPMailer
                 $body .= static::$LE;
                 $body .= $this->textLine('--' . $this->boundary[1]);
                 $body .= $this->headerLine('Content-Type', static::CONTENT_TYPE_MULTIPART_RELATED . ';');
-                $body .= $this->textLine("\tboundary=\"" . $this->boundary[2] . '"');
+                $body .= $this->textLine(' boundary="' . $this->boundary[2] . '";');
+                $body .= $this->textLine(' type="' . static::CONTENT_TYPE_TEXT_HTML . '"');
                 $body .= static::$LE;
                 $body .= $this->getBoundary($this->boundary[2], $bodyCharSet, static::CONTENT_TYPE_TEXT_HTML, $bodyEncoding);
                 $body .= $this->encodeString($this->Body, $bodyEncoding);
@@ -2611,7 +2615,7 @@ class PHPMailer
                 $body .= $mimepre;
                 $body .= $this->textLine('--' . $this->boundary[1]);
                 $body .= $this->headerLine('Content-Type', static::CONTENT_TYPE_MULTIPART_ALTERNATIVE . ';');
-                $body .= $this->textLine("\tboundary=\"" . $this->boundary[2] . '"');
+                $body .= $this->textLine(' boundary="' . $this->boundary[2] . '"');
                 $body .= static::$LE;
                 $body .= $this->getBoundary($this->boundary[2], $altBodyCharSet, static::CONTENT_TYPE_PLAINTEXT, $altBodyEncoding);
                 $body .= $this->encodeString($this->AltBody, $altBodyEncoding);
@@ -2631,14 +2635,15 @@ class PHPMailer
                 $body .= $mimepre;
                 $body .= $this->textLine('--' . $this->boundary[1]);
                 $body .= $this->headerLine('Content-Type', static::CONTENT_TYPE_MULTIPART_ALTERNATIVE . ';');
-                $body .= $this->textLine("\tboundary=\"" . $this->boundary[2] . '"');
+                $body .= $this->textLine(' boundary="' . $this->boundary[2] . '"');
                 $body .= static::$LE;
                 $body .= $this->getBoundary($this->boundary[2], $altBodyCharSet, static::CONTENT_TYPE_PLAINTEXT, $altBodyEncoding);
                 $body .= $this->encodeString($this->AltBody, $altBodyEncoding);
                 $body .= static::$LE;
                 $body .= $this->textLine('--' . $this->boundary[2]);
                 $body .= $this->headerLine('Content-Type', static::CONTENT_TYPE_MULTIPART_RELATED . ';');
-                $body .= $this->textLine("\tboundary=\"" . $this->boundary[3] . '"');
+                $body .= $this->textLine(' boundary="' . $this->boundary[3] . '";');
+                $body .= $this->textLine(' type="' . static::CONTENT_TYPE_TEXT_HTML . '"');
                 $body .= static::$LE;
                 $body .= $this->getBoundary($this->boundary[3], $bodyCharSet, static::CONTENT_TYPE_TEXT_HTML, $bodyEncoding);
                 $body .= $this->encodeString($this->Body, $bodyEncoding);
@@ -2825,8 +2830,13 @@ class PHPMailer
      *
      * @return bool
      */
-    public function addAttachment($path, $name = '', $encoding = self::ENCODING_BASE64, $type = '', $disposition = 'attachment')
-    {
+    public function addAttachment(
+        $path,
+        $name = '',
+        $encoding = self::ENCODING_BASE64,
+        $type = '',
+        $disposition = 'attachment'
+    ) {
         try {
             if (!static::isPermittedPath($path) || !@is_file($path)) {
                 throw new Exception($this->lang('file_access') . $path, self::STOP_CONTINUE);
@@ -2837,9 +2847,13 @@ class PHPMailer
                 $type = static::filenameToType($path);
             }
 
-            $filename = basename($path);
+            $filename = static::mb_pathinfo($path, PATHINFO_BASENAME);
             if ('' == $name) {
                 $name = $filename;
+            }
+
+            if (!$this->validateEncoding($encoding)) {
+                throw new Exception($this->lang('encoding') . $encoding);
             }
 
             $this->attachment[] = [
@@ -2942,14 +2956,18 @@ class PHPMailer
                 }
 
                 if (!empty($cid)) {
-                    $mime[] = sprintf('Content-ID: <%s>%s', $cid, static::$LE);
+                    $mime[] = sprintf(
+                        'Content-ID: <%s>%s',
+                        $this->encodeHeader($this->secureHeader($cid)),
+                        static::$LE
+                    );
                 }
 
                 // If a filename contains any of these chars, it should be quoted,
                 // but not otherwise: RFC2183 & RFC2045 5.1
                 // Fixes a warning in IETF's msglint MIME checker
                 // Allow for bypassing the Content-Disposition header totally
-                if (!(empty($disposition))) {
+                if (!empty($disposition)) {
                     $encoded_name = $this->encodeHeader($this->secureHeader($name));
                     if (preg_match('/[ \(\)<>@,;:\\"\/\[\]\?=]/', $encoded_name)) {
                         $mime[] = sprintf(
@@ -3034,6 +3052,8 @@ class PHPMailer
      * @param string $str      The text to encode
      * @param string $encoding The encoding to use; one of 'base64', '7bit', '8bit', 'binary', 'quoted-printable'
      *
+     * @throws Exception
+     *
      * @return string
      */
     public function encodeString($str, $encoding = self::ENCODING_BASE64)
@@ -3063,6 +3083,9 @@ class PHPMailer
                 break;
             default:
                 $this->setError($this->lang('encoding') . $encoding);
+                if ($this->exceptions) {
+                    throw new Exception($this->lang('encoding') . $encoding);
+                }
                 break;
         }
 
@@ -3305,6 +3328,10 @@ class PHPMailer
      * @param string $encoding    File encoding (see $Encoding)
      * @param string $type        File extension (MIME) type
      * @param string $disposition Disposition to use
+     *
+     * @throws Exception
+     *
+     * @return bool True on successfully adding an attachment
      */
     public function addStringAttachment(
         $string,
@@ -3313,21 +3340,38 @@ class PHPMailer
         $type = '',
         $disposition = 'attachment'
     ) {
-        // If a MIME type is not specified, try to work it out from the file name
-        if ('' == $type) {
-            $type = static::filenameToType($filename);
+        try {
+            // If a MIME type is not specified, try to work it out from the file name
+            if ('' == $type) {
+                $type = static::filenameToType($filename);
+            }
+
+            if (!$this->validateEncoding($encoding)) {
+                throw new Exception($this->lang('encoding') . $encoding);
+            }
+
+            // Append to $attachment array
+            $this->attachment[] = [
+                0 => $string,
+                1 => $filename,
+                2 => static::mb_pathinfo($filename, PATHINFO_BASENAME),
+                3 => $encoding,
+                4 => $type,
+                5 => true, // isStringAttachment
+                6 => $disposition,
+                7 => 0,
+            ];
+        } catch (Exception $exc) {
+            $this->setError($exc->getMessage());
+            $this->edebug($exc->getMessage());
+            if ($this->exceptions) {
+                throw $exc;
+            }
+
+            return false;
         }
-        // Append to $attachment array
-        $this->attachment[] = [
-            0 => $string,
-            1 => $filename,
-            2 => basename($filename),
-            3 => $encoding,
-            4 => $type,
-            5 => true, // isStringAttachment
-            6 => $disposition,
-            7 => 0,
-        ];
+
+        return true;
     }
 
     /**
@@ -3347,37 +3391,57 @@ class PHPMailer
      * @param string $type        File MIME type
      * @param string $disposition Disposition to use
      *
+     * @throws Exception
+     *
      * @return bool True on successfully adding an attachment
      */
-    public function addEmbeddedImage($path, $cid, $name = '', $encoding = self::ENCODING_BASE64, $type = '', $disposition = 'inline')
-    {
-        if (!static::isPermittedPath($path) || !@is_file($path)) {
-            $this->setError($this->lang('file_access') . $path);
+    public function addEmbeddedImage(
+        $path,
+        $cid,
+        $name = '',
+        $encoding = self::ENCODING_BASE64,
+        $type = '',
+        $disposition = 'inline'
+    ) {
+        try {
+            if (!static::isPermittedPath($path) || !@is_file($path)) {
+                throw new Exception($this->lang('file_access') . $path, self::STOP_CONTINUE);
+            }
+
+            // If a MIME type is not specified, try to work it out from the file name
+            if ('' == $type) {
+                $type = static::filenameToType($path);
+            }
+
+            if (!$this->validateEncoding($encoding)) {
+                throw new Exception($this->lang('encoding') . $encoding);
+            }
+
+            $filename = static::mb_pathinfo($path, PATHINFO_BASENAME);
+            if ('' == $name) {
+                $name = $filename;
+            }
+
+            // Append to $attachment array
+            $this->attachment[] = [
+                0 => $path,
+                1 => $filename,
+                2 => $name,
+                3 => $encoding,
+                4 => $type,
+                5 => false, // isStringAttachment
+                6 => $disposition,
+                7 => $cid,
+            ];
+        } catch (Exception $exc) {
+            $this->setError($exc->getMessage());
+            $this->edebug($exc->getMessage());
+            if ($this->exceptions) {
+                throw $exc;
+            }
 
             return false;
         }
-
-        // If a MIME type is not specified, try to work it out from the file name
-        if ('' == $type) {
-            $type = static::filenameToType($path);
-        }
-
-        $filename = basename($path);
-        if ('' == $name) {
-            $name = $filename;
-        }
-
-        // Append to $attachment array
-        $this->attachment[] = [
-            0 => $path,
-            1 => $filename,
-            2 => $name,
-            3 => $encoding,
-            4 => $type,
-            5 => false, // isStringAttachment
-            6 => $disposition,
-            7 => $cid,
-        ];
 
         return true;
     }
@@ -3397,6 +3461,8 @@ class PHPMailer
      * @param string $type        MIME type - will be used in preference to any automatically derived type
      * @param string $disposition Disposition to use
      *
+     * @throws Exception
+     *
      * @return bool True on successfully adding an attachment
      */
     public function addStringEmbeddedImage(
@@ -3407,24 +3473,60 @@ class PHPMailer
         $type = '',
         $disposition = 'inline'
     ) {
-        // If a MIME type is not specified, try to work it out from the name
-        if ('' == $type and !empty($name)) {
-            $type = static::filenameToType($name);
+        try {
+            // If a MIME type is not specified, try to work it out from the name
+            if ('' == $type and !empty($name)) {
+                $type = static::filenameToType($name);
+            }
+
+            if (!$this->validateEncoding($encoding)) {
+                throw new Exception($this->lang('encoding') . $encoding);
+            }
+
+            // Append to $attachment array
+            $this->attachment[] = [
+                0 => $string,
+                1 => $name,
+                2 => $name,
+                3 => $encoding,
+                4 => $type,
+                5 => true, // isStringAttachment
+                6 => $disposition,
+                7 => $cid,
+            ];
+        } catch (Exception $exc) {
+            $this->setError($exc->getMessage());
+            $this->edebug($exc->getMessage());
+            if ($this->exceptions) {
+                throw $exc;
+            }
+
+            return false;
         }
 
-        // Append to $attachment array
-        $this->attachment[] = [
-            0 => $string,
-            1 => $name,
-            2 => $name,
-            3 => $encoding,
-            4 => $type,
-            5 => true, // isStringAttachment
-            6 => $disposition,
-            7 => $cid,
-        ];
-
         return true;
+    }
+
+    /**
+     * Validate encodings.
+     *
+     * @param $encoding
+     *
+     * @return bool
+     */
+    protected function validateEncoding($encoding)
+    {
+        return in_array(
+            $encoding,
+            [
+                self::ENCODING_7BIT,
+                self::ENCODING_QUOTED_PRINTABLE,
+                self::ENCODING_BASE64,
+                self::ENCODING_8BIT,
+                self::ENCODING_BINARY,
+            ],
+            true
+        );
     }
 
     /**
@@ -3802,7 +3904,7 @@ class PHPMailer
                     // Do not change absolute URLs, including anonymous protocol
                     and !preg_match('#^[a-z][a-z0-9+.-]*:?//#i', $url)
                 ) {
-                    $filename = basename($url);
+                    $filename = static::mb_pathinfo($url, PATHINFO_BASENAME);
                     $directory = dirname($url);
                     if ('.' == $directory) {
                         $directory = '';
@@ -4045,7 +4147,7 @@ class PHPMailer
     {
         $ret = ['dirname' => '', 'basename' => '', 'extension' => '', 'filename' => ''];
         $pathinfo = [];
-        if (preg_match('#^(.*?)[\\\\/]*(([^/\\\\]*?)(\.([^\.\\\\/]+?)|))[\\\\/\.]*$#im', $path, $pathinfo)) {
+        if (preg_match('#^(.*?)[\\\\/]*(([^/\\\\]*?)(\.([^.\\\\/]+?)|))[\\\\/.]*$#m', $path, $pathinfo)) {
             if (array_key_exists(1, $pathinfo)) {
                 $ret['dirname'] = $pathinfo[1];
             }
@@ -4365,7 +4467,7 @@ class PHPMailer
             $extraHeaderKeys .= ':' . $key;
             $extraHeaderValues .= $value . "\r\n";
             if ($this->DKIM_copyHeaderFields) {
-                $extraCopyHeaderFields .= "\t|" . str_replace('|', '=7C', $this->DKIM_QP($value)) . ";\r\n";
+                $extraCopyHeaderFields .= ' |' . str_replace('|', '=7C', $this->DKIM_QP($value)) . ";\r\n";
             }
         }
         if ($this->DKIM_copyHeaderFields) {
@@ -4373,10 +4475,10 @@ class PHPMailer
             $to = str_replace('|', '=7C', $this->DKIM_QP($to_header));
             $date = str_replace('|', '=7C', $this->DKIM_QP($date_header));
             $subject = str_replace('|', '=7C', $this->DKIM_QP($subject_header));
-            $copiedHeaderFields = "\tz=$from\r\n" .
-                                  "\t|$to\r\n" .
-                                  "\t|$date\r\n" .
-                                  "\t|$subject;\r\n" .
+            $copiedHeaderFields = " z=$from\r\n" .
+                                  " |$to\r\n" .
+                                  " |$date\r\n" .
+                                  " |$subject;\r\n" .
                                   $extraCopyHeaderFields;
         }
         $body = $this->DKIM_BodyC($body);
@@ -4393,12 +4495,12 @@ class PHPMailer
             $DKIMlen . '; s=' .
             $this->DKIM_selector .
             ";\r\n" .
-            "\tt=" . $DKIMtime . '; c=' . $DKIMcanonicalization . ";\r\n" .
-            "\th=From:To:Date:Subject" . $extraHeaderKeys . ";\r\n" .
-            "\td=" . $this->DKIM_domain . ';' . $ident . "\r\n" .
+            ' t=' . $DKIMtime . '; c=' . $DKIMcanonicalization . ";\r\n" .
+            ' h=From:To:Date:Subject' . $extraHeaderKeys . ";\r\n" .
+            ' d=' . $this->DKIM_domain . ';' . $ident . "\r\n" .
             $copiedHeaderFields .
-            "\tbh=" . $DKIMb64 . ";\r\n" .
-            "\tb=";
+            ' bh=' . $DKIMb64 . ";\r\n" .
+            ' b=';
         $toSign = $this->DKIM_HeaderC(
             $from_header . "\r\n" .
             $to_header . "\r\n" .
